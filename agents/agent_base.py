@@ -7,44 +7,67 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-class AgentBase(ABC):
-    def __init__(self, name, max_retries=2, verbose=True):
+class BaseAIProcessor(ABC):
+    """
+    Base class for all AI processing agents
+    
+    Attributes:
+        name (str): Unique identifier for the agent
+        max_attempts (int): Maximum number of retry attempts
+        debug_mode (bool): Enable/disable debug logging
+    """
+    
+    def __init__(self, name, max_attempts=2, debug_mode=True):
         self.name = name
-        self.max_retries = max_retries
-        self.verbose = verbose
+        self.max_attempts = max_attempts
+        self.debug_mode = debug_mode
 
     @abstractmethod
-    def execute(self, *args, **kwargs):
+    def process(self, *args, **kwargs):
+        """Abstract method to be implemented by child classes"""
         pass
 
-    def call_llm(self, messages, max_tokens=150):
-        retries = 0
-        while retries < self.max_retries:
+    def invoke_model(self, messages, max_output_tokens=150):
+        """
+        Execute model with retry mechanism
+        
+        Args:
+            messages (list): List of message dictionaries
+            max_output_tokens (int): Maximum tokens in response
+            
+        Returns:
+            str: Model response content
+            
+        Raises:
+            Exception: If all attempts fail
+        """
+        attempt = 0
+        while attempt < self.max_attempts:
             try:
-                if self.verbose:
-                    logger.info(f"[{self.name}] - Sending messages to LLM:")
+                if self.debug_mode:
+                    logger.info(f"[{self.name}] - Initiating model request:")
                     for msg in messages:
-                        logger.info(f"[{self.name}] - {msg['role']}: {msg['content']}")
+                        logger.info(f"[{self.name}] - Role: {msg['role']}, Content: {msg['content']}")
 
-                response = ollama.chat(
+                model_response = ollama.chat(
                     model="llama3:latest",
                     messages=messages,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
+                    temperature=0.7,
+                    max_tokens=max_output_tokens,
                     stream=True
                 )
 
-                reply_content = ""
-                for chunk in response:
+                response_content = ""
+                for chunk in model_response:
                     if "message" in chunk and "content" in chunk["message"]:
-                        reply_content += chunk["message"]["content"]
+                        response_content += chunk["message"]["content"]
 
-                if self.verbose:
-                    logger.info(f"[{self.name}] - LLM reply: {reply_content}")
-                return reply_content
+                if self.debug_mode:
+                    logger.info(f"[{self.name}] - Model response: {response_content}")
+                return response_content
 
-            except Exception as e:
-                retries += 1
-                logger.error(f"[{self.name}] - LLM call failed: {e}. Retry {retries} of {self.max_retries}")
-                if retries == self.max_retries:
-                    raise Exception(f"[{self.name}] - LLM call failed after {self.max_retries} retries")
+            except Exception as error:
+                attempt += 1
+                logger.error(f"[{self.name}] - Model execution failed: {error}. Attempt {attempt} of {self.max_attempts}")
+                if attempt == self.max_attempts:
+                    raise Exception(f"[{self.name}] - Model execution failed after {self.max_attempts} attempts")

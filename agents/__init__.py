@@ -1,24 +1,24 @@
-from .summarize_tool import SummarizeTool
-from .sanitize_data import SanitizeData
-from .article_tool import ArticleTool
+from .text_summarizer import TextSummarizer
+from .data_sanitizer import DataSanitizer
+from .article_generator import ArticleGenerator
 
-from .write_article_validator_agent import WriteArticleValidatorAgent
-from .sanitize_data_validator_agent import SanitizeDataValidatorAgent
-from .summary_validator_agent import SummaryValidatorAgent
+from .article_quality_validator import ArticleQualityValidator
+from .data_sanitization_validator import DataSanitizationValidator
+from .summary_validator import SummaryValidator
 
-from .refiner_agent import RefinerAgent
+from .content_refiner import ContentRefiner
 
 
 class AgentManager:
-    def __init__(self, max_retries=2, verbose=True):
+    def __init__(self, max_attempts=2, debug_mode=True):
         self.agents = {
-            "summarize": SummarizeTool("summarize", max_retries=max_retries, verbose=verbose),
-            "write_article": ArticleTool("write_article", max_retries=max_retries, verbose=verbose),
-            "sanitize_data": SanitizeData("sanitize_data", max_retries=max_retries, verbose=verbose),
-            "summary_validator": SummaryValidatorAgent("summary_validator", max_retries=max_retries, verbose=verbose),
-            "write_article_validator": WriteArticleValidatorAgent("write_article_validator", max_retries=max_retries, verbose=verbose),
-            "sanitize_data_validator": SanitizeDataValidatorAgent("sanitize_data_validator", max_retries=max_retries, verbose=verbose),
-            "refiner": RefinerAgent("refiner", max_retries=max_retries, verbose=verbose)
+            "TextSummarizer": TextSummarizer("TextSummarizer", max_attempts=max_attempts, debug_mode=debug_mode),
+            "ArticleGenerator": ArticleGenerator("ArticleGenerator", max_attempts=max_attempts, debug_mode=debug_mode),
+            "DataSanitizer": DataSanitizer("DataSanitizer", max_attempts=max_attempts, debug_mode=debug_mode),
+            "SummaryValidator": SummaryValidator("SummaryValidator", max_attempts=max_attempts, debug_mode=debug_mode),
+            "ArticleQualityValidator": ArticleQualityValidator("ArticleQualityValidator", max_attempts=max_attempts, debug_mode=debug_mode),
+            "DataSanitizationValidator": DataSanitizationValidator("DataSanitizationValidator", max_attempts=max_attempts, debug_mode=debug_mode),
+            "ContentRefiner": ContentRefiner("ContentRefiner", max_attempts=max_attempts, debug_mode=debug_mode)
         }
 
     def get_agent(self, agent_name):

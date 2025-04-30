@@ -35,17 +35,23 @@ def main():
 
     
 def summarize_section(agent_manager):
-    st.header("Summarize Text")
+    st.header("Text Summarization")
     text = st.text_area("Enter text to summarize", height=200)
-    if st.button("Summarize"):
+    if st.button("Generate Summary"):
         if text:
-            summary = agent_manager.get_agent("summarize")
-            validator_agent = agent_manager.get_agent("summary_validator")
+            summarizer = agent_manager.get_agent("TextSummarizer")
+            validator = agent_manager.get_agent("SummaryValidator")
             with st.spinner("Generating summary..."):
                 try:
-                    summary = summary.execute(text)
-                    st.subheader("Summary:")
+                    summary = summarizer.process(text)
+                    st.subheader("Generated Summary:")
                     st.write(summary)
+                    
+                    if validator:
+                        with st.spinner("Validating summary..."):
+                            validation = validator.process(text, summary)
+                            st.subheader("Validation Report:")
+                            st.write(validation)
                 except Exception as e:
                     st.error(f"Error generating summary: {str(e)}")
                     logger.error(f"Error generating summary: {str(e)}")
@@ -63,19 +69,24 @@ def summarize_section(agent_manager):
             st.warning("Please enter text to summarize")
 
 def write_article_section(agent_manager):
-    st.header("Write and Refine Article")
-    topic = st.text_input("Enter topic")
-    outline = st.text_area("Enter outline", height=150)
-    if st.button("Write Article"):
+    st.header("Article Generation")
+    topic = st.text_input("Enter article topic")
+    outline = st.text_area("Optional outline", height=100)
+    if st.button("Generate Article"):
         if topic:
-            article = agent_manager.get_agent("write_article")
-            refiner_agent = agent_manager.get_agent("refiner")
-            validator_agent = agent_manager.get_agent("write_article_validator")
+            generator = agent_manager.get_agent("ArticleGenerator")
+            validator = agent_manager.get_agent("ArticleQualityValidator")
             with st.spinner("Generating article..."):
                 try:
-                    article = article.execute(topic, outline)
-                    st.subheader("Article:")
+                    article = generator.process(topic, outline)
+                    st.subheader("Generated Article:")
                     st.write(article)
+                    
+                    if validator:
+                        with st.spinner("Validating article..."):
+                            validation = validator.process(topic, article, outline)
+                            st.subheader("Quality Report:")
+                            st.write(validation)
                 except Exception as e:
                     st.error(f"Error generating article: {str(e)}")
                     logger.error(f"Error generating article: {str(e)}")
@@ -104,17 +115,23 @@ def write_article_section(agent_manager):
 
 
 def sanitize_data_section(agent_manager):
-    st.header("Sanitize Data")
-    data = st.text_area("Enter data", height=200)
+    st.header("Data Sanitization")
+    data = st.text_area("Enter data to sanitize", height=200)
     if st.button("Sanitize Data"):
         if data:
-            sanitize_data = agent_manager.get_agent("sanitize_data")
-            validator_agent = agent_manager.get_agent("sanitize_data_validator")
+            sanitizer = agent_manager.get_agent("DataSanitizer")
+            validator = agent_manager.get_agent("DataSanitizationValidator")
             with st.spinner("Sanitizing data..."):
                 try:
-                    sanitized_data = sanitize_data.execute(data)
+                    sanitized_data = sanitizer.process(data)
                     st.subheader("Sanitized Data:")
                     st.write(sanitized_data)
+                    
+                    if validator:
+                        with st.spinner("Validating sanitization..."):
+                            validation = validator.process(data, sanitized_data)
+                            st.subheader("Validation Report:")
+                            st.write(validation)
                 except Exception as e:
                     st.error(f"Error sanitizing data: {str(e)}")
                     logger.error(f"Error sanitizing data: {str(e)}")
